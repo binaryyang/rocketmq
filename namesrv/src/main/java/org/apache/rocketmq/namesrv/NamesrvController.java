@@ -74,16 +74,19 @@ public class NamesrvController {
     }
 
     public boolean initialize() {
-
+        // 加载 kv 配置
         this.kvConfigManager.load();
 
+        // 创建 netty 远程服务器
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
+        // netty 远程服务线程池
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
         this.registerProcessor();
 
+        // 定期移除不活跃的 broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
