@@ -86,6 +86,9 @@ public class DefaultRequestProcessor extends AsyncNettyRequestProcessor implemen
                 return this.getKVConfig(ctx, request);
             case RequestCode.DELETE_KV_CONFIG:
                 return this.deleteKVConfig(ctx, request);
+
+            // 处理 broker
+            // 查询 broker 的版本信息
             case RequestCode.QUERY_DATA_VERSION:
                 return queryBrokerTopicConfig(ctx, request);
             case RequestCode.REGISTER_BROKER:
