@@ -448,7 +448,7 @@ public class MQClientAPIImpl {
         long beginStartTime = System.currentTimeMillis();
         RemotingCommand request = null;
         String msgType = msg.getProperty(MessageConst.PROPERTY_MESSAGE_TYPE);
-        boolean isReply = msgType != null && msgType.equals(MixAll.REPLY_MESSAGE_FLAG);
+        boolean isReply = MixAll.REPLY_MESSAGE_FLAG.equals(msgType);
         if (isReply) {
             if (sendSmartMsg) {
                 SendMessageRequestHeaderV2 requestHeaderV2 = SendMessageRequestHeaderV2.createSendMessageRequestHeaderV2(requestHeader);

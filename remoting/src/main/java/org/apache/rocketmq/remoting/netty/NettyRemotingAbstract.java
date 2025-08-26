@@ -305,16 +305,13 @@ public abstract class NettyRemotingAbstract {
         ExecutorService executor = this.getCallbackExecutor();
         if (executor != null) {
             try {
-                executor.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            responseFuture.executeInvokeCallback();
-                        } catch (Throwable e) {
-                            log.warn("execute callback in executor exception, and callback throw", e);
-                        } finally {
-                            responseFuture.release();
-                        }
+                executor.submit(() -> {
+                    try {
+                        responseFuture.executeInvokeCallback();
+                    } catch (Throwable e) {
+                        log.warn("execute callback in executor exception, and callback throw", e);
+                    } finally {
+                        responseFuture.release();
                     }
                 });
             } catch (Exception e) {
@@ -406,21 +403,17 @@ public abstract class NettyRemotingAbstract {
             final ResponseFuture responseFuture = new ResponseFuture(channel, opaque, timeoutMillis, null, null);
             this.responseTable.put(opaque, responseFuture);
             final SocketAddress addr = channel.remoteAddress();
-            channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture f) throws Exception {
-                    if (f.isSuccess()) {
-                        responseFuture.setSendRequestOK(true);
-                        return;
-                    } else {
-                        responseFuture.setSendRequestOK(false);
-                    }
-
-                    responseTable.remove(opaque);
-                    responseFuture.setCause(f.cause());
-                    responseFuture.putResponse(null);
-                    log.warn("send a request command to channel <" + addr + "> failed.");
+            channel.writeAndFlush(request).addListener((ChannelFutureListener) f -> {
+                if (f.isSuccess()) {
+                    responseFuture.setSendRequestOK(true);
+                    return;
                 }
+
+                responseFuture.setSendRequestOK(false);
+                responseTable.remove(opaque);
+                responseFuture.setCause(f.cause());
+                responseFuture.putResponse(null);
+                log.warn("send a request command to channel <" + addr + "> failed.");
             });
 
             RemotingCommand responseCommand = responseFuture.waitResponse(timeoutMillis);
