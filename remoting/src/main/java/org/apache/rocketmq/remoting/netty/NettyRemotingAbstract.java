@@ -525,7 +525,7 @@ public abstract class NettyRemotingAbstract {
                     public void operationComplete(ChannelFuture f) throws Exception {
                         once.release();
                         if (!f.isSuccess()) {
-                            log.warn("send a request command to channel <" + channel.remoteAddress() + "> failed.");
+                            log.warn("send a request command to channel <{}> failed.", channel.remoteAddress());
                         }
                     }
                 });
