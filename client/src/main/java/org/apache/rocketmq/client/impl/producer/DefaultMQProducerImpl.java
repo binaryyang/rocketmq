@@ -122,7 +122,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         this.defaultMQProducer = defaultMQProducer;
         this.rpcHook = rpcHook;
 
-        this.asyncSenderThreadPoolQueue = new LinkedBlockingQueue<Runnable>(50000);
+        this.asyncSenderThreadPoolQueue = new LinkedBlockingQueue<>(50000);
         this.defaultAsyncSenderExecutor = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),
             Runtime.getRuntime().availableProcessors(),
@@ -502,22 +502,18 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         final long beginStartTime = System.currentTimeMillis();
         ExecutorService executor = this.getAsyncSenderExecutor();
         try {
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    long costTime = System.currentTimeMillis() - beginStartTime;
-                    if (timeout > costTime) {
-                        try {
-                            sendDefaultImpl(msg, CommunicationMode.ASYNC, sendCallback, timeout - costTime);
-                        } catch (Exception e) {
-                            sendCallback.onException(e);
-                        }
-                    } else {
-                        sendCallback.onException(
-                            new RemotingTooMuchRequestException("DEFAULT ASYNC send call timeout"));
+            executor.submit(() -> {
+                long costTime = System.currentTimeMillis() - beginStartTime;
+                if (timeout > costTime) {
+                    try {
+                        sendDefaultImpl(msg, CommunicationMode.ASYNC, sendCallback, timeout - costTime);
+                    } catch (Exception e) {
+                        sendCallback.onException(e);
                     }
+                } else {
+                    sendCallback.onException(
+                        new RemotingTooMuchRequestException("DEFAULT ASYNC send call timeout"));
                 }
-
             });
         } catch (RejectedExecutionException e) {
             throw new MQClientException("executor rejected ", e);

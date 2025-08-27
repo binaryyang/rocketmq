@@ -449,16 +449,13 @@ public abstract class NettyRemotingAbstract {
             final ResponseFuture responseFuture = new ResponseFuture(channel, opaque, timeoutMillis - costTime, invokeCallback, once);
             this.responseTable.put(opaque, responseFuture);
             try {
-                channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture f) throws Exception {
-                        if (f.isSuccess()) {
-                            responseFuture.setSendRequestOK(true);
-                            return;
-                        }
-                        requestFail(opaque);
-                        log.warn("send a request command to channel <{}> failed.", RemotingHelper.parseChannelRemoteAddr(channel));
+                channel.writeAndFlush(request).addListener((ChannelFutureListener) f -> {
+                    if (f.isSuccess()) {
+                        responseFuture.setSendRequestOK(true);
+                        return;
                     }
+                    requestFail(opaque);
+                    log.warn("send a request command to channel <{}> failed.", RemotingHelper.parseChannelRemoteAddr(channel));
                 });
             } catch (Exception e) {
                 responseFuture.release();
